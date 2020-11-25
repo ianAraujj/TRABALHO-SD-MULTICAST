@@ -121,6 +121,7 @@ thread_two.start()
 while True:
 
     data, address = sock.recvfrom(1024)
+    data = data.decode()
 
     if str(data)[:7] == "client ":
         imprimirMensagem(data, address)
@@ -135,7 +136,7 @@ while True:
             sock.sendto(resposta.encode(), address)
 
     else:
-        atualizarTabela(data.decode(), servidores_disponiveis, pin)
+        atualizarTabela(data, servidores_disponiveis, pin)
         exibirServidores(servidores_disponiveis)
 
 sock.close()
