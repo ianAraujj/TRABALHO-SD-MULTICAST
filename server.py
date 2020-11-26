@@ -127,13 +127,15 @@ while True:
         imprimirMensagem(data, address)
 
         if devoResponder(pin, servidores_disponiveis):
+            expressao = data[7:]
             resposta = ""
-            if int(str(data)[7:]) % 2 == 0:
-                resposta = "PAR!"
-            else:
-                resposta = "IMPAR!"
 
-            sock.sendto(resposta.encode(), address)
+            try:
+                resposta = round(eval(expressao), 2)
+            except:
+                resposta = "Expressão Incorreta"
+
+            sock.sendto(str(resposta).encode(), address)
 
     else:
         atualizarTabela(data, servidores_disponiveis, pin)
