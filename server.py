@@ -18,7 +18,7 @@ class EstouVivo(Thread):
         while True:
             mensagem =  "DISPONIVEL " + str(self.id)
             self.sock.sendto(str(mensagem).encode(), self.multicast_group_server)
-            time.sleep(0.2)
+            time.sleep(0.3)
 
 
 # Thread que Regurlamente LIMPA a Tabela de Servidores
@@ -31,7 +31,7 @@ class LimparTabela(Thread):
     def run(self):
         while True:
             del self.servidores_disponiveis[:]
-            time.sleep(3)
+            time.sleep(3.5)
 
 def imprimirMensagem(data, address):
     print("Recebi algo de: " + str(address))

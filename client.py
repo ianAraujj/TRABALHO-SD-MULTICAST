@@ -23,8 +23,18 @@ def receberExpressao():
 
 def enviarMensagem(sock, mensagem, multicast_group):
     print("Calculando ... um momento\n")
-    time.sleep(0.5)
+    time.sleep(0.7)
     sock.sendto(str(mensagem).encode(), multicast_group)
+
+def verificarDuplicatas(historico, resultado, id_server, expressao):
+    for i in historico:
+        if i[0] == resultado and i[1] != id_server and i[2] != expressao:
+            return True
+    return False
+
+
+historico = []
+
 
 while True:
 
@@ -43,8 +53,15 @@ while True:
             if resultado == "":
                 resultado = "Expressao Invalida !!"
             
-            print("Resultado: " + str(resultado))
-            print("Respondido pelo Servidor de ID: " + str(id_server))
-            break
+            
+            if verificarDuplicatas(historico, str(resultado), str(id_server), str(mensagem)):
+                ## Mensagem Duplicata ou Atrasada
+                print("recalculando ....")
+            else:
+                historico.append((str(resultado), str(id_server), str(mensagem)))
+
+                print("Resultado: " + str(resultado))
+                print("Respondido pelo Servidor de ID: " + str(id_server))
+                break
 
 sock.close()
