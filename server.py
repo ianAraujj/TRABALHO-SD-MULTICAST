@@ -5,23 +5,23 @@ import threading
 from threading import Thread
 import time
 
-# Thread que Envia Regurlamente mensagens para os Outros Servidores
+# Thread que Envia Regularmente mensagens para os Outros Servidores
 class EstouVivo(Thread):
 
-    def __init__ (self, sock, pin, multicast_group_server):
+    def __init__ (self, sock, id, multicast_group_server):
         Thread.__init__(self)
         self.sock = sock
-        self.pin = pin
+        self.id = id
         self.multicast_group_server = multicast_group_server
 
     def run(self):
         while True:
-            mensagem =  "DISPONIVEL " + str(self.pin)
+            mensagem =  "DISPONIVEL " + str(self.id)
             self.sock.sendto(str(mensagem).encode(), self.multicast_group_server)
-            time.sleep(2)
+            time.sleep(0.3)
 
 
-# Thread que Regurlamente LIMPA a Tabela contendo Outros Servidores
+# Thread que Regurlamente LIMPA a Tabela de Servidores
 class LimparTabela(Thread):
 
     def __init__ (self, servidores_disponiveis):
@@ -30,40 +30,39 @@ class LimparTabela(Thread):
 
     def run(self):
         while True:
-            print("LIMPANDO ...")
             del self.servidores_disponiveis[:]
-            time.sleep(3)
+            time.sleep(1)
 
 def imprimirMensagem(data, address):
     print("Recebi algo de: " + str(address))
 
-def atualizarTabela(data, servidores_disponiveis, pin):
+def atualizarTabela(data, servidores_disponiveis, id):
     if "DISPONIVEL" in str(data):
-        pin_server = str(data)[11:]
+        id_server = str(data)[11:]
         try:
-            if int(pin) == int(pin_server):
+            if int(id) == int(id_server):
                 return
         except:
             pass
-        if pin_server not in servidores_disponiveis:
-            servidores_disponiveis.append(pin_server)
+        if id_server not in servidores_disponiveis:
+            servidores_disponiveis.append(id_server)
 
 def exibirServidores(servidores_disponiveis):
     print("OUTROS SERVIDORES DISPONIVEIS: \n")
     for servidor in servidores_disponiveis:
-        print("PIN -> " + str(servidor))
+        print("ID -> " + str(servidor))
         print("\n")
     print("\n")
 
-def devoResponder(pin, servidores_disponiveis):
-    for pin_server in servidores_disponiveis:
-        if int(pin_server) < int(pin):
+def devoResponder(id, servidores_disponiveis):
+    for id_server in servidores_disponiveis:
+        if int(id_server) < int(id):
             return False
     return True
 
-def validarPIN(pin):
+def validarID(id):
     try:
-        int(pin)
+        int(id)
         return True
     except:
         return False
@@ -104,41 +103,44 @@ sock.setsockopt(
 servidores_disponiveis = []
 
 while True:
-    entrada = input("Digite o PIN do Servidor: ")
+    entrada = input("Digite o ID do Servidor: ")
 
-    if validarPIN(entrada):
-        pin = entrada
+    if validarID(entrada):
+        id = entrada
         break
     else:
-        print("\n** ERRO ! O PIN deve ser um Valor Inteiro.\n")
+        print("\n** ERRO ! O ID deve ser um Valor Inteiro.\n")
 
 
-thread_one = EstouVivo(sock, pin, multicast_group_server_address)
+thread_one = EstouVivo(sock, id, multicast_group_server_address)
 thread_one.start()
 thread_two = LimparTabela(servidores_disponiveis)
 thread_two.start()
 
 while True:
 
+    time.sleep(0.1)
     data, address = sock.recvfrom(1024)
     data = data.decode()
 
+    ## SE a Mensagem for do Cliente
     if str(data)[:7] == "client ":
         imprimirMensagem(data, address)
 
-        if devoResponder(pin, servidores_disponiveis):
+        if devoResponder(id, servidores_disponiveis):
             expressao = data[7:]
             resposta = ""
 
             try:
-                resposta = round(eval(expressao), 2)
+                resposta = round(eval(expressao), 10)
             except:
-                resposta = "Expressão Incorreta"
+                pass
 
-            sock.sendto(str(resposta).encode(), address)
+            resposta_com_id = str(resposta) + "E" + str(id)
+            sock.sendto(resposta_com_id.encode(), address)
 
     else:
-        atualizarTabela(data, servidores_disponiveis, pin)
-        exibirServidores(servidores_disponiveis)
+        ## SE a Mensagem for de um SERVIDOR
+        atualizarTabela(data, servidores_disponiveis, id)
 
 sock.close()
