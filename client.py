@@ -1,9 +1,10 @@
 import socket
 import struct
 import sys
+import time
 
 # Tempo na qual o Cliente Espera, antes de reenviar a mensagem
-TIMEOUT = 1
+TIMEOUT = 5
 # Endereço do Multicast
 multicast_group = ('224.3.29.71', 10000)
 
@@ -21,7 +22,8 @@ def receberExpressao():
     return mensagem
 
 def enviarMensagem(sock, mensagem, multicast_group):
-    print("Enviando ... \n")
+    print("Calculando ... um momento\n")
+    time.sleep(0.5)
     sock.sendto(str(mensagem).encode(), multicast_group)
 
 while True:
