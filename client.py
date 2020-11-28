@@ -40,6 +40,7 @@ while True:
         try:
             data, server = sock.recvfrom(1024)
         except socket.timeout:
+            ## Tempo Esgotado
             enviarMensagem(sock, mensagem, multicast_group)
         else:
             resposta = data.decode()

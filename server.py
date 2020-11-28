@@ -98,8 +98,6 @@ sock.setsockopt(
     socket.IP_ADD_MEMBERSHIP,
     mreq)
 
-
-
 servidores_disponiveis = []
 
 while True:
