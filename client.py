@@ -16,9 +16,9 @@ sock.settimeout(TIMEOUT)
 ttl = struct.pack('b', 1)
 sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
 
-def receberExpressao():
+def receberExpressao(num_sequencia):
     mensagem = input('\nDigite a Expressão: ')    
-    mensagem = "client " + str(mensagem)
+    mensagem = "client " + str(mensagem) + "num_seq=" + str(num_sequencia)
     return mensagem
 
 def enviarMensagem(sock, mensagem, multicast_group):
@@ -26,42 +26,37 @@ def enviarMensagem(sock, mensagem, multicast_group):
     time.sleep(0.7)
     sock.sendto(str(mensagem).encode(), multicast_group)
 
-def verificarDuplicatas(historico, resultado, id_server, expressao):
-    for i in historico:
-        if i[0] == resultado and i[1] != id_server and i[2] != expressao:
-            return True
-    return False
 
-
-historico = []
-
+num_sequencia = 0
 
 while True:
 
-    mensagem = receberExpressao()
+    num_sequencia += 1
+    mensagem = receberExpressao(num_sequencia)
+    
     enviarMensagem(sock, mensagem, multicast_group)
 
     while True:
         try:
-            data, server = sock.recvfrom(16)
+            data, server = sock.recvfrom(1024)
         except socket.timeout:
             enviarMensagem(sock, mensagem, multicast_group)
         else:
             resposta = data.decode()
-            
-            resultado,id_server=resposta.split("E")
-            if resultado == "":
-                resultado = "Expressao Invalida !!"
-            
-            
-            if verificarDuplicatas(historico, str(resultado), str(id_server), str(mensagem)):
-                ## Mensagem Duplicata ou Atrasada
-                print("recalculando ....")
-            else:
-                historico.append((str(resultado), str(id_server), str(mensagem)))
+        
+            payload,header=resposta.split("server_id=")
+            id_server, num_sequencia_recebido = header.split("num_seq=")
+
+
+            if int(num_sequencia_recebido) == int(num_sequencia):
+                if payload == "FALHA":
+                    resultado = "Expressao Invalida !!"
+                else:
+                    resultado = str(payload)
 
                 print("Resultado: " + str(resultado))
                 print("Respondido pelo Servidor de ID: " + str(id_server))
+                
                 break
 
 sock.close()

@@ -119,7 +119,6 @@ thread_two.start()
 
 while True:
 
-    time.sleep(0.1)
     data, address = sock.recvfrom(1024)
     data = data.decode()
 
@@ -128,16 +127,21 @@ while True:
         imprimirMensagem(data, address)
 
         if devoResponder(id, servidores_disponiveis):
-            expressao = data[7:]
+            
+            req = data[7:]
+            dados = req.split("num_seq=")
+            expressao = dados[0]
+            num_seq = dados[len(dados)-1]
+
             resposta = ""
 
             try:
                 resposta = round(eval(expressao), 10)
             except:
-                pass
+                resposta = "FALHA"
 
-            resposta_com_id = str(resposta) + "E" + str(id)
-            sock.sendto(resposta_com_id.encode(), address)
+            resposta_com_id = str(resposta) + "server_id=" + str(id) + "num_seq=" + str(num_seq)
+            sock.sendto(str(resposta_com_id).encode(), address)
 
     else:
         ## SE a Mensagem for de um SERVIDOR
